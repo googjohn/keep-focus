@@ -1,2 +1,2 @@
-# promodoro-clock
-small side project, promodoro-alarm-clock
+# keep-focus
+small side project, pomodoro clock, keep focus

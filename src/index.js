@@ -1,7 +1,8 @@
 const clockDisplay = document.querySelector(".clock-display");
-const dataSelected = document.querySelector("[data-selected='true']");
+const timerTypes = document.querySelector("#option-buttons");
 const startBtn = document.querySelector("#startBtn");
 
+console.log(timerTypes)
 // define an enumeration - we can also use boolean flag
 const States = Object.freeze({
   isRunning: "isRunning",
@@ -64,27 +65,21 @@ function resetTimer() {
 }
 
 startBtn.onclick = () => {
-  console.log("status before click ", currentStatus)
-
   switch (currentStatus) {
     case States.isStopped:
       startTimer();
       updateButton("pause", true);
-      console.log("status after click ", currentStatus)
       break;
     case States.isPaused:
       resumeTimer();
       updateButton("pause", true);
-      console.log("status after click ", currentStatus)
       break;
     case States.isRunning:
       pauseTimer();
       updateButton("start", false);
-      console.log("status after click ", currentStatus)
       break;
     default:
       stopTimer();
-      console.log("status after click ", currentStatus)
       break;
   }
 
@@ -108,8 +103,7 @@ function countdownTimer() {
     if (currentDuration <= 0) {
       clearInterval(timerInterval);
       currentStatus = States.isStopped;
-      startBtn.textContent = "start".toUpperCase();
-      startBtn.dataset.active = false;
+      updateButton("start", false)
       clockDisplay.innerHTML = formatTime(0)
       return;
     }
