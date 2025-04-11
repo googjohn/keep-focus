@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{Keep Focus}</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <header id="header">
+    <nav id="nav">
+      <div id="home-banner">Keep Focus</div>
+      <div id="main-nav">
+          <button type="button" class="links">Report</button>
+          <button type="button" class="links">Settings</button>
+          <button type="button" class="links">Sign In</button>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <div id="options-container">
+      <div id="option-buttons">
+        <button type="button" class="links" data-selected="true">Promodoro</button>
+        <button type="button" class="links" data-selected="false">Short Break</button>
+        <button type="button" class="links" data-selected="false">Long Break</button>
+      </div>
+      <div id="time-container">
+        <div class="clock-display">
+          <span>25:00</span>
+        </div>
+      </div>
+      <div class="button-container">
+        <button id="startBtn" class="links" type="button" data-active="false" value="start">Start</button>
+      </div>
+    </div>
+    <div id="extras">
+      <div id="motivation-quotes">
+        <span class="quote-number">#1</span>
+        <p class="quote">Time to focus!</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="index.js"></script>
+</body>
+</html>
