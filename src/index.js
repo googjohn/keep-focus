@@ -2,6 +2,7 @@ const clockDisplay = document.querySelector(".clock-display");
 const optionBtns = document.querySelector("#option-buttons");
 const startBtn = document.querySelector("#startBtn");
 const defaultValueSelectedTimer = document.querySelector('[data-selected=true]');
+const quote = document.querySelector(".quote");
 
 // define an enumeration - we can also use boolean flag
 const States = Object.freeze({
@@ -139,6 +140,7 @@ let prevSelected = null;
 let currSelected = document.querySelector('[data-selected=true]');
 optionBtns.addEventListener("click", (event) => {
   let targetElem = event.target // current target/element
+  let targetValue = targetElem.value
 
   if (targetElem.dataset.selected !== true) {
     prevSelected = currSelected;
@@ -170,17 +172,20 @@ optionBtns.addEventListener("click", (event) => {
       stopTimer()
       updateButton("start", false)
     }
+    quote.textContent = `Time to ${targetValue.slice(0, targetValue.indexOf('-'))}!`
+
   }
   function setShortBreak() {
     let defaultDuration = parseInt(getValue(targetElem))
     let typeDuration = (defaultDuration || duration) * 60
     clockDisplay.innerHTML = formatTime(typeDuration)
-
     duration = typeDuration
     if (currentStatus === States.isRunning) {
       stopTimer()
       updateButton("start", false)
     }
+    quote.textContent = `Take a ${targetValue.slice(0, targetValue.indexOf('-'))} break`
+
   }
   function setLongBreak() {
     let defaultDuration = parseInt(getValue(targetElem))
@@ -192,95 +197,11 @@ optionBtns.addEventListener("click", (event) => {
       stopTimer()
       updateButton("start", false)
     }
+    quote.textContent = `Take a ${targetValue.slice(0, targetValue.indexOf('-'))} break`
+
   }
 
   function getValue(elem) {
     return elem.dataset.value
   }
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function clickHandle(event) {
-
-  const setFocusOn = () => {
-    // prev = curr;
-    let isSelected = event.target.dataset.selected
-    if (!prev) {
-      previousSelected = null;
-    } else {
-
-      previousSelected = document.querySelector(`[value=${prev}]`)
-    }
-    console.log(previousSelected)
-
-    if (isSelected !== true) {
-      isSelected = true;
-      previousSelected.dataset.selected = false;
-    }
-    console.log(isSelected)
-  };
-
-  const setShortBreak = () => {
-    // update the display
-    clockDisplay.innerHTML = formatTime(duration)
-
-  };
-
-  const setLongBreak = () => {
-    // update the display
-    clockDisplay.innerHTML = formatTime(duration)
-  };
-
-
-  /*   switch (event.target.value) {
-      case "focus-on":
-        setFocusOn();
-        break;
-      case "short-break":
-        setShortBreak();
-        break;
-      case "long-break":
-        setLongBreak();
-        break;
-      default:
-        break;
-    } */
-}
