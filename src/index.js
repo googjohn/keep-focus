@@ -1,8 +1,8 @@
 const clockDisplay = document.querySelector(".clock-display");
-const timerTypes = document.querySelector("#option-buttons");
+const optionBtns = document.querySelector("#option-buttons");
 const startBtn = document.querySelector("#startBtn");
+const defaultValueSelectedTimer = document.querySelector('[data-selected=true]');
 
-console.log(timerTypes)
 // define an enumeration - we can also use boolean flag
 const States = Object.freeze({
   isRunning: "isRunning",
@@ -10,9 +10,11 @@ const States = Object.freeze({
   isStopped: "isStopped",
 })
 
+let inputValue = 5;
+
 let startTime = 0;
 let elapsedTime = 0;
-let duration = 25 * 60; // base is minute, multiply by 60 for seconds value
+let duration = (parseInt(defaultValueSelectedTimer.dataset.value)) * 60; // base is minute, multiply by 60 for seconds value
 let remainingDuration = 0;
 let timerInterval = null;
 let currentStatus = States.isStopped;
@@ -130,4 +132,149 @@ function updateButton(state, active) {
   startBtn.value = state;
   startBtn.textContent = state.toUpperCase();
   startBtn.dataset.active = active;
+}
+
+// delegate event to option-buttons container
+let prevSelected = null;
+let currSelected = document.querySelector('[data-selected=true]');
+optionBtns.addEventListener("click", (event) => {
+  let targetElem = event.target // current target/element
+
+  if (targetElem.dataset.selected !== true) {
+    prevSelected = currSelected;
+    prevSelected.dataset.selected = false;
+    targetElem.dataset.selected = true;
+    currSelected = targetElem;
+  }
+
+  switch (event.target.value) {
+    case "focus-on":
+      setFocusOn();
+      break;
+    case "short-break":
+      setShortBreak();
+      break;
+    case "long-break":
+      setLongBreak();
+      break;
+    default:
+      break;
+  }
+  function setFocusOn() {
+    let defaultDuration = parseInt(getValue(targetElem))
+    console.log(duration)
+    console.log(defaultDuration)
+    let typeDuration = (defaultDuration || duration) * 60
+    console.log(typeDuration)
+    clockDisplay.innerHTML = formatTime(typeDuration)
+    duration = typeDuration
+  }
+  function setShortBreak() {
+    let defaultDuration = parseInt(getValue(targetElem))
+    console.log(duration)
+    console.log(defaultDuration)
+    let typeDuration = (defaultDuration || duration) * 60
+    console.log(typeDuration)
+    clockDisplay.innerHTML = formatTime(typeDuration)
+    duration = typeDuration
+  }
+  function setLongBreak() {
+    let defaultDuration = parseInt(getValue(targetElem))
+    console.log(duration)
+    console.log(defaultDuration)
+    let typeDuration = (defaultDuration || duration) * 60
+    console.log(typeDuration)
+    clockDisplay.innerHTML = formatTime(typeDuration)
+    duration = typeDuration
+  }
+
+  function getValue(elem) {
+    return elem.dataset.value
+  }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function clickHandle(event) {
+
+  const setFocusOn = () => {
+    // prev = curr;
+    let isSelected = event.target.dataset.selected
+    if (!prev) {
+      previousSelected = null;
+    } else {
+
+      previousSelected = document.querySelector(`[value=${prev}]`)
+    }
+    console.log(previousSelected)
+
+    if (isSelected !== true) {
+      isSelected = true;
+      previousSelected.dataset.selected = false;
+    }
+    console.log(isSelected)
+  };
+
+  const setShortBreak = () => {
+    // update the display
+    clockDisplay.innerHTML = formatTime(duration)
+
+  };
+
+  const setLongBreak = () => {
+    // update the display
+    clockDisplay.innerHTML = formatTime(duration)
+  };
+
+
+  /*   switch (event.target.value) {
+      case "focus-on":
+        setFocusOn();
+        break;
+      case "short-break":
+        setShortBreak();
+        break;
+      case "long-break":
+        setLongBreak();
+        break;
+      default:
+        break;
+    } */
 }
