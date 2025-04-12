@@ -162,30 +162,36 @@ optionBtns.addEventListener("click", (event) => {
   }
   function setFocusOn() {
     let defaultDuration = parseInt(getValue(targetElem))
-    console.log(duration)
-    console.log(defaultDuration)
     let typeDuration = (defaultDuration || duration) * 60
-    console.log(typeDuration)
     clockDisplay.innerHTML = formatTime(typeDuration)
+
     duration = typeDuration
+    if (currentStatus === States.isRunning) {
+      stopTimer()
+      updateButton("start", false)
+    }
   }
   function setShortBreak() {
     let defaultDuration = parseInt(getValue(targetElem))
-    console.log(duration)
-    console.log(defaultDuration)
     let typeDuration = (defaultDuration || duration) * 60
-    console.log(typeDuration)
     clockDisplay.innerHTML = formatTime(typeDuration)
+
     duration = typeDuration
+    if (currentStatus === States.isRunning) {
+      stopTimer()
+      updateButton("start", false)
+    }
   }
   function setLongBreak() {
     let defaultDuration = parseInt(getValue(targetElem))
-    console.log(duration)
-    console.log(defaultDuration)
     let typeDuration = (defaultDuration || duration) * 60
-    console.log(typeDuration)
     clockDisplay.innerHTML = formatTime(typeDuration)
+
     duration = typeDuration
+    if (currentStatus === States.isRunning) {
+      stopTimer()
+      updateButton("start", false)
+    }
   }
 
   function getValue(elem) {
