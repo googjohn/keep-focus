@@ -96,7 +96,25 @@ main {
   border-radius: 5px;
   border: none;
 
-  &[data-selected="true"] {
+  &[data-selected='true'] {
+    font-weight: 700;
+  }
+}
+
+.links.focus-on {
+   &[data-selected='true'] {
     background-color: rgb(66, 45, 94);
+  }
+}
+
+.links.short-break {
+  &[data-selected='true'] {
+    background-color: rgb(38, 152, 172); 
+  }
+}
+
+.links.long-break {
+  &[data-selected='true'] {
+    background-color: rgb(138, 45, 122);
   }
 }
