@@ -101,20 +101,32 @@ main {
   }
 }
 
-.links.focus-on {
+.links.focus-on, body.focus-on {
    &[data-selected='true'] {
     background-color: rgb(66, 45, 94);
   }
 }
 
-.links.short-break {
+.links.short-break, body.short-break {
   &[data-selected='true'] {
     background-color: rgb(38, 152, 172); 
   }
 }
 
-.links.long-break {
+.links.long-break, body.long-break {
   &[data-selected='true'] {
     background-color: rgb(138, 45, 122);
   }
+}
+
+body.focus-on { 
+  background-color: rgb(66, 45, 94);
+}
+
+body.short-break {
+  background-color: rgb(38, 152, 172); 
+}
+
+body.long-break {
+  background-color: rgb(138, 45, 122);
 }

@@ -66,7 +66,7 @@ function countDown(duration, displayElement) {
   let elapsedTime = startTime;
   let totalDuration = duration;
   let currentDuration = 0;
-  GLOBAL.totalDuration = totalDuration
+  GLOBAL.totalDuration = totalDuration;
 
   return function () {
     GLOBAL.timerInterval = setInterval(() => {
@@ -85,7 +85,7 @@ function countDown(duration, displayElement) {
 
         // wait a certain time before running break
         setTimeout(() => {
-          runOptionType()
+          runOptionType();
         }, 3000);
       }
 
@@ -101,19 +101,35 @@ function runOptionType() {
     GLOBAL.count += 1;
     if (GLOBAL.count >= GLOBAL.maxCount) {
       GLOBAL.count = 0;
-      GLOBAL.states.currentOptionType = OptionType.isLongBreak;
+
+      // update background before changing current option type >> order matters
       const longBreak = document.querySelector('[value="long-break"]')
+      updateButtonBackground(GLOBAL.states.currentOptionType, longBreak)
+
+      GLOBAL.states.currentOptionType = OptionType.isLongBreak;
+      updateAppBackground(GLOBAL.states.currentOptionType);
+
       GLOBAL.duration = parseInt(longBreak.dataset.value)
       startTime(GLOBAL.duration)
     } else {
-      GLOBAL.states.currentOptionType = OptionType.isShortBreak
+      // update background before changing current option type >> order matters
       const shortBreak = document.querySelector('[value="short-break"]')
+      updateButtonBackground(GLOBAL.states.currentOptionType, shortBreak)
+
+      GLOBAL.states.currentOptionType = OptionType.isShortBreak
+      updateAppBackground(GLOBAL.states.currentOptionType);
+
       GLOBAL.duration = parseInt(shortBreak.dataset.value)
       startTime(GLOBAL.duration)
     }
   } else { // return to focus
-    GLOBAL.states.currentOptionType = OptionType.isFocusOn
+    // update background before changing current option type >> order matters
     const focusOn = document.querySelector('[value="focus-on"]')
+    updateButtonBackground(GLOBAL.states.currentOptionType, focusOn)
+
+    GLOBAL.states.currentOptionType = OptionType.isFocusOn
+    updateAppBackground(GLOBAL.states.currentOptionType);
+
     GLOBAL.duration = parseInt(focusOn.dataset.value);
     startTime(GLOBAL.duration)
   }
@@ -137,6 +153,27 @@ function updateStartButton(state, buttonElement, isActive) {
   buttonElement.value = state;
   buttonElement.textContent = state.toUpperCase();
   buttonElement.dataset.active = isActive;
+}
+
+// toggles/updates button and app background
+function updateButtonBackground(optionType, element) {
+  GLOBAL.previousSelected = document.querySelector(`[value='${optionType}']`)
+  currentSelected = element;
+  currentSelected.dataset.selected = true;
+  GLOBAL.previousSelected.dataset.selected = false;
+}
+
+// toggles/updates app background >> use after global current option type has been modified
+// to match the current timer type (focus, short-break, long-break)
+function updateAppBackground(optionType) {
+  /* if (!document.body.classList.length) {
+    document.body.classList.add(optionType)
+    } else {
+      document.body.classList.forEach(item => document.body.classList.remove(item));
+    document.body.classList.add(optionType)
+    } */
+  // let's simplify this by using className instead
+  document.body.className = optionType
 }
 
 // countdown start
@@ -179,4 +216,3 @@ function resetTime() {
   GLOBAL.timerInterval = null;
   clockDisplay.innerHTML = formatTime(0)
 }
-
