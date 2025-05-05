@@ -5,6 +5,7 @@ const startButton = document.querySelector("#startBtn");
 let currentSelected = document.querySelector("[data-selected='true']");
 const quoteElement = document.querySelector(".quote");
 const messageElement = document.querySelector(".message");
+const alarm = new Audio('./mixkit-digital-clock-digital-alarm-buzzer-992.wav')
 
 // define enum (enumeration) or boolean flag for state management
 const Timer = Object.freeze({
@@ -239,9 +240,13 @@ function resetTime() {
 // send alert
 function sendAlert(optionType) {
   if (optionType !== OptionType.isFocusOn) {
-    alert("Time to focus!")
+    alarm.play();
+    alert("Time to focus!");
+    alarm.pause()
   } else {
+    alarm.play();
     alert("Take a break!")
+    alarm.pause();
   }
 }
 
@@ -275,7 +280,6 @@ function optionTypeButtonHandle(event) {
 
 // update message content
 function updateMessage(optionType) {
-  console.log(optionType)
   if (optionType !== OptionType.isFocusOn) {
     return `Time to take a ${optionType.split('-')[0]} break.`
   } else {
@@ -283,3 +287,4 @@ function updateMessage(optionType) {
   }
 }
 
+// next to add is user input of timings and/maybe add some motivation/inspirational quotes
