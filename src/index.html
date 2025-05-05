@@ -11,9 +11,9 @@
     <nav id="nav">
       <div id="home-banner">Keep Focus</div>
       <div id="main-nav">
-          <button type="button" class="links">Report</button>
-          <button type="button" class="links">Settings</button>
-          <button type="button" class="links">Sign In</button>
+          <!-- <button type="button" class="links">Report</button> -->
+          <button type="button" class="links" id="modal-button">Settings</button>
+          <!-- <button type="button" class="links">Sign In</button> -->
       </div>
     </nav>
   </header>
@@ -40,6 +40,37 @@
       </div>
     </div>
   </main>
+  <div class="modal" data-modal-active="false">
+    <div class="setting-container">
+      <div class="setting-heading">
+        <h2>SETTING <span class="close-modal">X</span></h2>
+      </div>
+      <div class="title">
+        <h3>Time (minutes)</h3>
+      </div>
+      <div class="time-setting">
+        <div class="foc">
+          <label for="focus">Focus</label>
+          <input type="number" class="user-time-input" name="focus" placeholder="25" data-value="25" id="focus">
+        </div>
+        <div class="shrt-brk">
+          <label for="short-break">Short break</label>
+          <input type="number" class="user-time-input" name="short-break" placeholder="5" data-value="5" id="short-break">
+        </div>
+        <div class="lng-brk">
+          <label for="long-break">Long break</label>
+          <input type="number" class="user-time-input" name="long-break" placeholder="15" data-value="15" id="long-break">
+        </div>
+      </div>
+      <div class="title">
+        <h3>Long Break Interval</h3>
+      </div>
+      <div class="interval-setting">
+        <input type="number" class="user-time-input" name="interval" min="3" placeholder="4" data-value="4" id="interval">
+      </div>
+    </div>
+  </div>
+
 
   <!-- <script type="module" src="index.js"></script> -->
   <script src="index.js"></script>

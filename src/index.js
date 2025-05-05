@@ -5,7 +5,11 @@ const startButton = document.querySelector("#startBtn");
 let currentSelected = document.querySelector("[data-selected='true']");
 const quoteElement = document.querySelector(".quote");
 const messageElement = document.querySelector(".message");
-const alarm = new Audio('./mixkit-digital-clock-digital-alarm-buzzer-992.wav')
+const alarm = new Audio('./mixkit-digital-clock-digital-alarm-buzzer-992.wav');
+const settings = document.querySelector("#modal-button");
+const closeModal = document.querySelector(".close-modal");
+const modal = document.querySelector('.modal');
+const userInputs = document.querySelectorAll('.user-time-input');
 
 // define enum (enumeration) or boolean flag for state management
 const Timer = Object.freeze({
@@ -37,10 +41,18 @@ const GLOBAL = {
   maxCount: 3,
 }
 
+// object for user input
+const UserInput = {
+  focus: 0,
+  shortBreak: 0,
+  longBreak: 0,
+  interval: 3, // default/min
+}
+
 GLOBAL.duration = parseInt(currentSelected.dataset.value);
 
 // initial display of duration
-clockDisplay.innerHTML = formatTime(GLOBAL.duration)
+clockDisplay.innerHTML = formatTime(GLOBAL.duration);
 
 // start/pause button handle
 startButton.onclick = function () {
@@ -243,10 +255,12 @@ function sendAlert(optionType) {
     alarm.play();
     alert("Time to focus!");
     alarm.pause()
+    alarm.currentTime = 0;
   } else {
     alarm.play();
     alert("Take a break!")
     alarm.pause();
+    alarm.currentTime = 0;
   }
 }
 
@@ -288,3 +302,60 @@ function updateMessage(optionType) {
 }
 
 // next to add is user input of timings and/maybe add some motivation/inspirational quotes
+settings.addEventListener('click', settingHandle)
+closeModal.addEventListener('click', settingHandle)
+
+// user input setttings
+function settingHandle(event) {
+  const button = event.target
+  modal.classList.toggle('active')
+
+  if (button.dataset.modalActive === 'true') {
+    // button.dataset.modalActive = false;
+    modal.dataset.modalActive = false;
+  } else {
+    // button.dataset.modalActive = true;
+    modal.dataset.modalActive = true;
+  }
+
+  if (!modal.classList.contains('active')) {
+    modal.dataset.modalActive = false;
+    // button.dataset.modalActive = false
+  }
+}
+
+// user input handle
+function userInputHandle(event) {
+  let element = event.target
+  const inputValue = element.value
+  switch (element.name) {
+    case 'focus':
+      console.log(inputValue)
+      UserInput.focus = inputValue
+      GLOBAL.duration = document.querySelector('[value="focus-on"]').dataset.value = inputValue
+      break;
+    case 'short-break':
+      console.log(inputValue)
+      UserInput.shortBreak = inputValue
+      GLOBAL.duration = document.querySelector('[value="short-break"]').dataset.value = inputValue
+      break;
+    case 'long-break':
+      console.log(inputValue)
+      UserInput.longBreak = inputValue
+      GLOBAL.duration = document.querySelector('[value="long-break"]').dataset.value = inputValue
+      break;
+    case 'interval':
+      console.log(inputValue)
+      UserInput.interval = inputValue
+      break;
+    default:
+      break;
+  }
+  // GLOBAL.duration = parseInt(inputValue);
+  // clockDisplay.innerHTML = formatTime(GLOBAL.duration)
+}
+
+// event listener to all inputs
+userInputs.forEach(input => {
+  input.addEventListener("input", userInputHandle)
+})
