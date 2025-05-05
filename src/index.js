@@ -1,352 +1,285 @@
-// import handleOptionButtons, { setFocusOn, setLongBreak, setShortBreak } from "./exportFunctions.js";
-import { countDown, formatTime, updateStartButton } from "./utilityFn.js";
+// declare/access elements needed
 const clockDisplay = document.querySelector(".clock-display");
-const optionBtns = document.querySelector("#option-buttons");
-const startBtn = document.querySelector("#startBtn");
-let currSelected = document.querySelector('[data-selected="true"]')
+const optionButtons = document.querySelector("#option-buttons");
+const startButton = document.querySelector("#startBtn");
+let currentSelected = document.querySelector("[data-selected='true']");
+const quoteElement = document.querySelector(".quote");
+const messageElement = document.querySelector(".message");
 
-// define an enumeration - we can also use boolean flag
-// states for when time is running, paused, or stopped
-const States = Object.freeze({
+// define enum (enumeration) or boolean flag for state management
+const Timer = Object.freeze({
   isRunning: "isRunning",
   isPaused: "isPaused",
   isStopped: "isStopped",
-})
+});
 
-// enum for when focus-on, short break, or long break
-const OptionStates = Object.freeze({
+// enum for active option
+const OptionType = Object.freeze({
   isShortBreak: "short-break",
   isLongBreak: "long-break",
   isFocusOn: "focus-on"
-})
+});
 
-let prevSelected = null;
-let userInputDuration = null;
-let inputValue = null;
-let startTime = 0;
-let elapsedTime = 0;
-let duration = (inputValue || (parseInt(currSelected.dataset.value))); // base is minute, multiply by 60 for seconds value
-let remainingDuration = 0;
-let timerInterval = null;
-let currentStatus = States.isStopped; // by default
-let currentOptionStates = OptionStates.isFocusOn // by default
-let count = 1;
-let maxCount = 3; // count before long break and reset of count
-
-// update the display with the current default values of time/duration
-clockDisplay.innerHTML = formatTime(duration)
-
-// ## functions for starting/pausing/resuming/stopping time
-function startTimer() {
-  if (currentStatus !== States.isRunning) {
-    currentStatus = States.isRunning;
-    // countdownTimer();
-    const timer = countDown(duration, clockDisplay)
-
-    timer();
-    updateStartButton("pause", startBtn, true)
-  }
+// declare/define variables or create a global object
+// variables as properties to save global name space
+const GLOBAL = {
+  duration: 0,
+  totalDuration: 0,
+  remainingDuration: 0,
+  states: {
+    currentTimerStatus: Timer.isStopped,
+    currentOptionType: OptionType.isFocusOn
+  },
+  timerInterval: null,
+  previousSelected: null,
+  count: 0,
+  maxCount: 3,
 }
 
-function stopTimer() {
-  if (currentStatus === States.isRunning || currentStatus === States.isPaused) {
-    currentStatus = States.isStopped;
-    clearInterval(timerInterval);
-    resetTimer();
-  }
-}
+GLOBAL.duration = parseInt(currentSelected.dataset.value);
 
-function pauseTimer() {
-  if (currentStatus === States.isRunning) {
-    currentStatus = States.isPaused;
-    clearInterval(timerInterval);
-  }
-}
+// initial display of duration
+clockDisplay.innerHTML = formatTime(GLOBAL.duration)
 
-function resumeTimer() {
-  if (currentStatus === States.isPaused) {
-    // use/update our duration with the remaining duration
-    // this works due to lexical environment and functions in javascript searching
-    // variables from call time and not creation time
-    // so updating here is necessary because it will search first just outside its lexical scope
-    // first before it go to the global scope if the variable is not found inside the function
-    duration = remainingDuration;
-    startTimer();
-  }
-}
-
-function resetTimer() {
-  if (currentStatus === States.isStopped) {
-    startTime = 0;
-    elapsedTime = 0;
-    remainingDuration = 0;
-    timerInterval = null;
-    clockDisplay.innerHTML = formatTime(0)
-  }
-}
-
-// ## attaching event to start/pause button
-startBtn.onclick = () => {
-  switch (currentStatus) {
-    case States.isStopped:
-      startTimer();
-      // updateStartButton("pause", true);
+// start/pause button handle
+startButton.onclick = function () {
+  switch (GLOBAL.states.currentTimerStatus) {
+    case Timer.isStopped:
+      startTime(GLOBAL.duration);
       break;
-    case States.isPaused:
-      resumeTimer();
-      // updateStartButton("pause", true);
+    case Timer.isPaused:
+      // use updated remaining duration
+      resumeTime(GLOBAL.remainingDuration);
       break;
-    case States.isRunning:
-      pauseTimer();
-      // updateStartButton("start", false);
-      break;
+    case Timer.isRunning:
+      pauseTime();
+      break
     default:
-      stopTimer();
+      stopTime();
       break;
   }
 }
 
-// ## countdown function
-function countdownTimer() {
-  startTime = Date.now();
-  elapsedTime = startTime;
+// event listener to option buttons
+optionButtons.addEventListener("click", optionTypeButtonHandle)
+
+// main function for counting down
+function countDown(duration, displayElement) {
+  // define/declare variables
+  // utilize closure
+  let startTime = Date.now();
+  let elapsedTime = startTime;
+  let totalDuration = duration;
   let currentDuration = 0;
+  GLOBAL.totalDuration = totalDuration;
 
-  timerInterval = setInterval(() => {
-    let currentTime = Date.now();
+  return function () {
 
-    // increasing per second
-    elapsedTime = Math.floor((currentTime - startTime) / 1000)
+    GLOBAL.timerInterval = setInterval(() => {
+      // define/declare variables that requires to be updated inside setInterval function
+      let currentTime = Date.now();
+      elapsedTime = Math.floor((currentTime - startTime) / 1000) // convert to seconds
 
-    // total duration - increase per second = remainng duration
-    currentDuration = duration - elapsedTime
+      currentDuration = totalDuration - elapsedTime
 
-    // if duration reaches 0, timer should stop
-    if (currentDuration <= 0) {
-      /* clearInterval(timerInterval);
-      currentStatus = States.isStopped;
-      clockDisplay.innerHTML = formatTime(0); */
-      stopTimer();
-      updateStartButton("start", startBtn, false)
-    }
+      // keep updated to be used for resume function
+      GLOBAL.remainingDuration = currentDuration;
 
-    // display the timer
-    clockDisplay.innerHTML = formatTime(currentDuration)
+      if (currentDuration <= 0) {
+        stopTime();
+        resetTime();
 
-    // update our remainingDuration for our resumeTimer to utilize
-    remainingDuration = currentDuration
-
-    // if count reaches max count we switch from focus on to long break instead of short break
-    if (count >= maxCount) {
-      if (remainingDuration <= 0 && currentOptionStates === OptionStates.isFocusOn) {
-        currentOptionStates = OptionStates.isLongBreak;
-        let currentElement = document.querySelector(`[value="${currentOptionStates}"]`)
-        prevSelected = currSelected;
-        currSelected = currentElement
-        prevSelected.dataset.selected = false;
-        currSelected.dataset.selected = true;
-        currentDuration = currentElement.dataset.value
-        remainingDuration = currentDuration;
-        let currentValue = parseInt(currentElement.dataset.value)
-        console.log('this is current value ', currentValue)
+        // send alert
         setTimeout(() => {
-          startTimer()
-          updateStartButton("pause", startBtn, true)
-        }, 3000)
-        clockDisplay.innerHTML = formatTime(currentValue)
-        updateBackground(currSelected)
+          // sendAlert(GLOBAL.states.currentOptionType)
+        }, 1000)
 
-        count = 0;
+        // wait a certain time before running break
+        setTimeout(() => {
+          runOptionType();
+        }, 3000);
 
       }
-    }
 
-    // auto switches from focus on to shor break
-    if (remainingDuration <= 0) {
-      if (currentOptionStates === OptionStates.isFocusOn) {
-        currentOptionStates = OptionStates.isShortBreak
-        let currentElement = document.querySelector(`[value="${currentOptionStates}"]`)
-        prevSelected = currSelected;
-        currSelected = currentElement
-        prevSelected.dataset.selected = false;
-        currSelected.dataset.selected = true;
-        currentDuration = currentElement.dataset.value
-        remainingDuration = currentDuration
-        let currentValue = parseInt(currentElement.dataset.value)
-        console.log(currentElement)
-        console.log('this is current value ', currentValue)
-
-        console.log(remainingDuration)
-        setTimeout(() => {
-          console.log(remainingDuration)
-          startTimer()
-          updateStartButton("pause", true)
-        }, 3000)
-        clockDisplay.innerHTML = formatTime(currentValue)
-        updateBackground(currSelected)
-
-
-      } else if (currentOptionStates === OptionStates.isShortBreak || currentOptionStates === OptionStates.isLongBreak) {
-        currentOptionStates = OptionStates.isFocusOn;
-        let currentElement = document.querySelector(`[value="${currentOptionStates}"]`)
-        prevSelected = currSelected;
-        currSelected = currentElement
-        prevSelected.dataset.selected = false;
-        currSelected.dataset.selected = true;
-        currentDuration = currentElement.dataset.value
-        remainingDuration = currentDuration
-        let currentValue = parseInt(currentElement.dataset.value)
-        console.log(currentElement)
-        console.log('this is current value ', currentValue)
-
-        console.log(remainingDuration)
-        setTimeout(() => {
-          console.log(remainingDuration)
-          startTimer()
-          updateStartButton("pause", true)
-        }, 3000)
-        clockDisplay.innerHTML = formatTime(currentValue)
-        updateBackground(currSelected)
-
-        count += 1;
-
-      }
-    }
-    // console.log(currentDuration)
-    // console.log(remainingDuration)
-  }, 1000)
-
-  console.log(count)
-  console.log(currentOptionStates)
-
-}
-
-function setOptionStates(optionState) {
-
-}
-
-/* function formatTime(duration) {
-
-  let minute = Math.floor(duration / 60);
-  minute = String(minute).padStart(2, '0');
-
-  let second = duration % 60;
-  second = String(second).padStart(2, '0');
-
-  return `<span>${minute}:${second}</span>`
-} */
-
-/* function updateStartButton(state, active) {
-  startBtn.value = state;
-  startBtn.textContent = state.toUpperCase();
-  startBtn.dataset.active = active;
-} */
-
-optionBtns.addEventListener('click', optionBtnHandler)
-
-function updateSelected(element) {
-  if (element.dataset.selected === 'false') {
-    prevSelected = currSelected;
-    currSelected = element;
-    currSelected.dataset.selected = true;
-    prevSelected.dataset.selected = false;
+      displayElement.innerHTML = formatTime(currentDuration)
+    }, 1000)
   }
 }
 
-// update background
-function updateBackground(element) {
-  let elementValue = element.value
-  console.log(element)
-  if (elementValue === 'focus-on') {
-    document.body.style.backgroundColor = 'rgb(66, 45, 94)';
-    // element.style.backgroundColor = 'rgb(66, 45, 94)';
-    // element.classList.add('focus-on')
-  } else if (elementValue === 'short-break') {
-    document.body.style.backgroundColor = 'rgb(38, 152, 172)'
-    // element.classList.add('short-break')
-    // element.style.backgroundColor = 'rgb(38, 152, 172)'
+// function for continuous running
+function runOptionType() {
+
+  // going to short/long break
+  if (GLOBAL.states.currentOptionType === OptionType.isFocusOn) {
+    GLOBAL.count += 1;
+    if (GLOBAL.count >= GLOBAL.maxCount) {
+      GLOBAL.count = 0;
+
+      // update background before changing current option type >> order matters
+      const longBreak = document.querySelector('[value="long-break"]')
+      updateButtonBackground(GLOBAL.states.currentOptionType, longBreak)
+
+      GLOBAL.states.currentOptionType = OptionType.isLongBreak;
+      updateAppBackground(GLOBAL.states.currentOptionType);
+
+      GLOBAL.duration = parseInt(longBreak.dataset.value)
+      startTime(GLOBAL.duration)
+
+    } else {
+      // update background before changing current option type >> order matters
+      const shortBreak = document.querySelector('[value="short-break"]')
+      updateButtonBackground(GLOBAL.states.currentOptionType, shortBreak)
+
+      GLOBAL.states.currentOptionType = OptionType.isShortBreak
+      updateAppBackground(GLOBAL.states.currentOptionType);
+
+      GLOBAL.duration = parseInt(shortBreak.dataset.value)
+      startTime(GLOBAL.duration)
+
+    }
+  } else { // return to focus
+
+    // update background before changing current option type >> order matters
+    const focusOn = document.querySelector('[value="focus-on"]')
+    updateButtonBackground(GLOBAL.states.currentOptionType, focusOn)
+
+    GLOBAL.states.currentOptionType = OptionType.isFocusOn
+    updateAppBackground(GLOBAL.states.currentOptionType);
+
+    GLOBAL.duration = parseInt(focusOn.dataset.value);
+    startTime(GLOBAL.duration)
+
+  }
+  // update displays
+  messageElement.textContent = updateMessage(GLOBAL.states.currentOptionType)
+  clockDisplay.innerHTML = formatTime(GLOBAL.duration)
+}
+
+// format time
+function formatTime(duration) {
+  // we can add modulo of 60 if total duration input exceeds 1 hour
+  let minutes = Math.floor(duration / 60);
+  minutes = String(minutes < 0 ? 0 : minutes).padStart(2, '0')
+
+  let seconds = duration % 60;
+  seconds = String(seconds < 0 ? 0 : seconds).padStart(2, '0')
+
+  return `<span>${minutes}:${seconds}</span>`
+}
+
+// toggles/updates start button display text
+function updateStartButton(state, buttonElement, isActive) {
+  buttonElement.value = state;
+  buttonElement.textContent = state.toUpperCase();
+  buttonElement.dataset.active = isActive;
+}
+
+// toggles/updates button and app background
+function updateButtonBackground(optionType, element) {
+  GLOBAL.previousSelected = document.querySelector(`[value='${optionType}']`)
+  currentSelected = element;
+  currentSelected.dataset.selected = true;
+  GLOBAL.previousSelected.dataset.selected = false;
+}
+
+// toggles/updates app background >> use after global current option type has been modified
+// to match the current timer type (focus, short-break, long-break)
+function updateAppBackground(optionType) {
+  /* if (!document.body.classList.length) {
+    document.body.classList.add(optionType)
+    } else {
+      document.body.classList.forEach(item => document.body.classList.remove(item));
+    document.body.classList.add(optionType)
+    } */
+  // let's simplify this by using className instead
+  document.body.className = optionType
+}
+
+// countdown start
+function startTime(duration) {
+  if (GLOBAL.states.currentTimerStatus !== Timer.isRunning) {
+    GLOBAL.states.currentTimerStatus = Timer.isRunning;
+    const countdown = countDown(duration, clockDisplay)
+    countdown();
+    updateStartButton('pause', startButton, true)
+  }
+}
+
+// stop time
+function stopTime() {
+  GLOBAL.states.currentTimerStatus = Timer.isStopped
+  clearInterval(GLOBAL.timerInterval)
+  updateStartButton("start", startButton, false)
+}
+
+// pause time
+function pauseTime() {
+  if (GLOBAL.states.currentTimerStatus === Timer.isRunning) {
+    GLOBAL.states.currentTimerStatus = Timer.isPaused
+    clearInterval(GLOBAL.timerInterval)
+    updateStartButton("start", startButton, false)
+  }
+}
+
+// resume time
+function resumeTime(duration) {
+  if (GLOBAL.states.currentTimerStatus !== Timer.isRunning) {
+    startTime(duration)
+  }
+}
+
+// reset time
+function resetTime() {
+  GLOBAL.duration = 0;
+  GLOBAL.remainingDuration = 0;
+  GLOBAL.timerInterval = null;
+  clockDisplay.innerHTML = formatTime(0)
+}
+
+// send alert
+function sendAlert(optionType) {
+  if (optionType !== OptionType.isFocusOn) {
+    alert("Time to focus!")
   } else {
-    document.body.style.backgroundColor = 'rgb(138, 45, 122)'
-    // element.classList.add('long-break')
-    // element.style.backgroundColor = 'rgb(138, 45, 122)'
+    alert("Take a break!")
   }
-  // prevSelected.style.backgroundColor = "rgba(255, 255, 255, .3)"
 }
 
-function optionBtnHandler(event) {
-  const message = document.querySelector('.message');
-  let element = event.target
-  let elementValue = element.value
+// option types button handle
+function optionTypeButtonHandle(event) {
+  let currentSelected = document.querySelector("[data-selected='true']")
+  const element = event.target;
 
-  // default duration >> if user didn't specify/input any change in duration
-  // then we use this default duration saved in data-value attribute
-  let defaultDuration = (parseInt(element.dataset.value)) * 60
-
-  if (element.dataset.selected === "false") {
-    updateSelected(element)
+  if (currentSelected.value === element.value) {
+    return;
   } else {
-    return
+    if (GLOBAL.states.currentTimerStatus !== Timer.isStopped) {
+      stopTime();
+    }
+
+    GLOBAL.previousSelected = currentSelected;
+    currentSelected = element;
+    GLOBAL.previousSelected.dataset.selected = false;
+    currentSelected.dataset.selected = true;
+
+    // updated GLOBAL current option type to match the clicked button
+    GLOBAL.states.currentOptionType = currentSelected.value
+
+    updateAppBackground(currentSelected.value)
+
+    GLOBAL.duration = parseInt(currentSelected.dataset.value)
+    clockDisplay.innerHTML = formatTime(GLOBAL.duration)
   }
+  messageElement.textContent = updateMessage(GLOBAL.states.currentOptionType)
+}
 
-  switch (elementValue) {
-    case 'focus-on':
-      setFocusOn();
-      updateBackground(element)
-      break;
-    case 'short-break':
-      setShorBreak()
-      updateBackground(element)
-      break;
-    case 'long-break':
-      setLongBreak()
-      updateBackground(element)
-      break;
-  }
-
-  // create local functions to be used inside the handler
-  // set time display, button, message for focus-on button
-  function setFocusOn() {
-    if (currentOptionStates !== OptionStates.isFocusOn) {
-      currentOptionStates = OptionStates.isFocusOn
-    }
-
-    if (currentStatus === States.isRunning || currentStatus == States.isPaused) {
-      stopTimer();
-      updateStartButton('start', false)
-    }
-    duration = (inputValue * 60) || defaultDuration
-    clockDisplay.innerHTML = formatTime(duration)
-    message.textContent = `Time to focus!`
-  }
-
-  // set time display, button, message for short-break button
-  function setShorBreak() {
-    if (currentOptionStates !== OptionStates.isShortBreak) {
-      currentOptionStates = OptionStates.isShortBreak
-    }
-
-    if (currentStatus === States.isRunning || currentStatus == States.isPaused) {
-      stopTimer();
-      updateStartButton('start', false)
-    }
-    duration = (inputValue * 60) || defaultDuration
-    clockDisplay.innerHTML = formatTime(duration)
-    message.textContent = `Take a ${elementValue.split('-')[0]} break.`
-  }
-
-  // set time display, button, message for long-break button
-  function setLongBreak() {
-    if (currentOptionStates !== OptionStates.isLongBreak) {
-      currentOptionStates = OptionStates.isLongBreak
-    }
-
-    if (currentStatus === States.isRunning || currentStatus == States.isPaused) {
-      stopTimer();
-      updateStartButton('start', false)
-    }
-    duration = (inputValue * 60) || defaultDuration
-    clockDisplay.innerHTML = formatTime(duration)
-    message.textContent = `Take a ${elementValue.split('-')[0]} break.`
+// update message content
+function updateMessage(optionType) {
+  console.log(optionType)
+  if (optionType !== OptionType.isFocusOn) {
+    return `Time to take a ${optionType.split('-')[0]} break.`
+  } else {
+    return `Time to ${optionType.split('-')[0]}!`
   }
 }
-// console.log(setFocusOn(currSelected, OptionStates))
+

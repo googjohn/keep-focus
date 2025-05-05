@@ -101,19 +101,19 @@ main {
   }
 }
 
-.links.focus-on, body.focus-on {
+.links.focus-on {
    &[data-selected='true'] {
     background-color: rgb(66, 45, 94);
   }
 }
 
-.links.short-break, body.short-break {
+.links.short-break {
   &[data-selected='true'] {
     background-color: rgb(38, 152, 172); 
   }
 }
 
-.links.long-break, body.long-break {
+.links.long-break {
   &[data-selected='true'] {
     background-color: rgb(138, 45, 122);
   }
