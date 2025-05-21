@@ -40,39 +40,56 @@
       </div>
     </div>
   </main>
-  <div class="modal" data-modal-active="false">
-    <div class="setting-container">
-      <div class="setting-heading">
+  <!-- modal ## settings -->
+  <div id="modal-container">
+    <div id="modal">
+      <div id="modal-header" class="border-bottom">
         <h2>SETTING <span class="close-modal">X</span></h2>
       </div>
-      <div class="title">
-        <h3>Time (minutes)</h3>
-      </div>
-      <div class="time-setting">
-        <div class="foc">
-          <label for="focus">Focus</label>
-          <input type="number" class="user-time-input" name="focus" placeholder="25" data-value="25" id="focus">
+      <div id="modal-main">
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <h3>TIMER</h3>
+          </div>
+          <div class="modal-content-container">
+            <div class="modal-content-title">
+              <h3>Time (minutes)</h3>
+            </div>
+            <div class="modal-content">
+              <div class="modal-items">
+                <div class="item1">
+                  <label for="modal-focus">Focus</label>
+                  <input type="number" class="modal-input" name="focus" min="1" data-value="25" placeholder="25" id="modal-focus">
+                </div>
+                <div class="item2">
+                  <label for="modal-short-break">Short Break</label>
+                  <input type="number" class="modal-input" name="short-break" min="1" data-value="5" placeholder="5" id="modal-short-break">
+                </div>
+                <div class="item3">
+                  <label for="modal-long-break">Long Break</label>
+                  <input type="number" class="modal-input" name="long-break" min="1" data-value="15" placeholder="15" id="modal-long-break">
+                </div>
+              </div>
+              <div class="modal-interval">
+                <label for="interval" class="modal-content-title">Long Break Interval</label>
+                <input type="number" class="modal-input interval" name="interval" min="3" placeholder="4" data-value="4" id="interval">
+              </div>
+            </div>
+          </div>    
         </div>
-        <div class="shrt-brk">
-          <label for="short-break">Short break</label>
-          <input type="number" class="user-time-input" name="short-break" placeholder="5" data-value="5" id="short-break">
+        <div class="modal-section">
+          <div class="modal-section-title"></div>
+          <div class="modal-items">
+            <div class="item">
+              <button class="save">Save</button>
+            </div>
+          </div>
         </div>
-        <div class="lng-brk">
-          <label for="long-break">Long break</label>
-          <input type="number" class="user-time-input" name="long-break" placeholder="15" data-value="15" id="long-break">
-        </div>
-      </div>
-      <div class="title">
-        <h3>Long Break Interval</h3>
-      </div>
-      <div class="interval-setting">
-        <input type="number" class="user-time-input" name="interval" min="3" placeholder="4" data-value="4" id="interval">
       </div>
     </div>
   </div>
 
-
-  <!-- <script type="module" src="index.js"></script> -->
   <script src="index.js"></script>
+  
 </body>
 </html>
