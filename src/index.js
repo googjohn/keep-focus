@@ -9,8 +9,12 @@ const alarm = new Audio('./mixkit-digital-clock-digital-alarm-buzzer-992.wav');
 const settings = document.querySelector("#modal-button");
 const closeModal = document.querySelector(".close-modal");
 const modal = document.querySelector('#modal-container');
-const userInputs = document.querySelectorAll('.modal-input');
 const saveButton = document.querySelector('.save');
+const userInputs = document.querySelectorAll('.modal-input');
+const inputFocus = document.querySelector("input[name='focus-on']");
+const inputShortBreak = document.querySelector("input[name='short-break']");
+const inputLongBreak = document.querySelector("input[name='long-break']");
+const inputInterval = document.querySelector("input[name='interval']");
 
 // define enum (enumeration) or boolean flag for state management
 const Timer = Object.freeze({
@@ -31,8 +35,12 @@ const UserInput = {
   focusDuration: 0,
   shortBreakDuration: 0,
   longBreakDuration: 0,
-  interval: 3, // default/min
+  interval: 4, // default
 }
+UserInput.focusDuration = inputFocus.value || parseInt(inputFocus.dataset.value) * 60;
+UserInput.shortBreakDuration = inputShortBreak.value || parseInt(inputShortBreak.dataset.value) * 60;
+UserInput.longBreakDuration = inputLongBreak.value || parseInt(inputLongBreak.dataset.value) * 60;
+UserInput.interval = inputInterval.value || parseInt(inputInterval.dataset.value)
 
 // declare/define variables or create a global object
 // variables as properties to save global name space
@@ -45,12 +53,13 @@ const GLOBAL = {
     currentOptionType: OptionType.isFocusOn
   },
   timerInterval: null,
+  currentSelected: currentSelected,
   previousSelected: null,
   count: 0,
   maxCount: UserInput.interval,
 }
 
-GLOBAL.duration = parseInt(currentSelected.dataset.value);
+GLOBAL.duration = UserInput.focusDuration; // change. use input counterpart
 
 // initial display of duration
 clockDisplay.innerHTML = formatTime(GLOBAL.duration);
@@ -105,7 +114,7 @@ function countDown(duration, displayElement) {
 
         // send alert
         setTimeout(() => {
-          // sendAlert(GLOBAL.states.currentOptionType)
+          sendAlert(GLOBAL.states.currentOptionType)
         }, 1000)
 
         // wait a certain time before running break
@@ -130,37 +139,37 @@ function runOptionType() {
       GLOBAL.count = 0;
 
       // update background before changing current option type >> order matters
-      const longBreak = document.querySelector('[value="long-break"]')
+      const longBreak = document.querySelector('button[value="long-break"]')
       updateButtonBackground(GLOBAL.states.currentOptionType, longBreak)
 
       GLOBAL.states.currentOptionType = OptionType.isLongBreak;
       updateAppBackground(GLOBAL.states.currentOptionType);
 
-      GLOBAL.duration = parseInt(longBreak.dataset.value)
+      GLOBAL.duration = UserInput.longBreakDuration * 60;
       startTime(GLOBAL.duration)
 
     } else {
       // update background before changing current option type >> order matters
-      const shortBreak = document.querySelector('[value="short-break"]')
+      const shortBreak = document.querySelector('button[value="short-break"]')
       updateButtonBackground(GLOBAL.states.currentOptionType, shortBreak)
 
       GLOBAL.states.currentOptionType = OptionType.isShortBreak
       updateAppBackground(GLOBAL.states.currentOptionType);
 
-      GLOBAL.duration = parseInt(shortBreak.dataset.value)
+      GLOBAL.duration = UserInput.shortBreakDuration * 60;
       startTime(GLOBAL.duration)
 
     }
   } else { // return to focus
 
     // update background before changing current option type >> order matters
-    const focusOn = document.querySelector('[value="focus-on"]')
+    const focusOn = document.querySelector('button[value="focus-on"]')
     updateButtonBackground(GLOBAL.states.currentOptionType, focusOn)
 
     GLOBAL.states.currentOptionType = OptionType.isFocusOn
     updateAppBackground(GLOBAL.states.currentOptionType);
 
-    GLOBAL.duration = parseInt(focusOn.dataset.value);
+    GLOBAL.duration = UserInput.focusDuration * 60;
     startTime(GLOBAL.duration)
 
   }
@@ -192,6 +201,7 @@ function updateStartButton(state, buttonElement, isActive) {
 function updateButtonBackground(optionType, element) {
   GLOBAL.previousSelected = document.querySelector(`[value='${optionType}']`)
   currentSelected = element;
+  GLOBAL.currentSelected = currentSelected;
   currentSelected.dataset.selected = true;
   GLOBAL.previousSelected.dataset.selected = false;
 }
@@ -281,13 +291,34 @@ function optionTypeButtonHandle(event) {
     currentSelected = element;
     GLOBAL.previousSelected.dataset.selected = false;
     currentSelected.dataset.selected = true;
+    GLOBAL.currentSelected = currentSelected;
 
-    // updated GLOBAL current option type to match the clicked button
+    // update GLOBAL current option type to match the clicked button
     GLOBAL.states.currentOptionType = currentSelected.value
 
     updateAppBackground(currentSelected.value)
 
-    GLOBAL.duration = parseInt(currentSelected.dataset.value)
+    // get the counterpart input using button/current selected value
+    let inputValue = parseInt(document.querySelector(`input[name="${currentSelected.value}"]`).value);
+    let defaultValue = parseInt(document.querySelector(`input[name="${currentSelected.value}"]`).dataset.value)
+
+    switch (element.value) {
+      case OptionType.isFocusOn:
+        UserInput.focusDuration = inputValue || defaultValue;
+        GLOBAL.duration = UserInput.focusDuration * 60
+        break;
+      case OptionType.isShortBreak:
+        UserInput.shortBreakDuration = inputValue || defaultValue;
+        GLOBAL.duration = UserInput.shortBreakDuration * 60
+        break;
+      case OptionType.isLongBreak:
+        UserInput.longBreakDuration = inputValue || defaultValue;
+        GLOBAL.duration = UserInput.longBreakDuration * 60
+        break;
+      default:
+        break;
+    }
+
     clockDisplay.innerHTML = formatTime(GLOBAL.duration)
   }
   messageElement.textContent = updateMessage(GLOBAL.states.currentOptionType)
@@ -306,69 +337,61 @@ function updateMessage(optionType) {
 settings.addEventListener('click', settingHandle)
 closeModal.addEventListener('click', settingHandle)
 
+// event listener to all inputs
+userInputs.forEach(input => {
+  input.addEventListener("change", userInputHandle)
+})
+
 // user input setttings
 function settingHandle(event) {
   const button = event.target
   modal.classList.toggle('active')
 
   if (button.dataset.modalActive === 'true') {
-    // button.dataset.modalActive = false;
     modal.dataset.modalActive = false;
   } else {
-    // button.dataset.modalActive = true;
     modal.dataset.modalActive = true;
   }
 
   if (!modal.classList.contains('active')) {
     modal.dataset.modalActive = false;
-    // button.dataset.modalActive = false
   }
 }
 
 // user input handle
 function userInputHandle(event) {
   let element = event.target
-  const inputValue = element.value
+  let inputValue = parseInt(element.value)
+
+  if (GLOBAL.states.currentTimerStatus !== Timer.isStopped) {
+    GLOBAL.states.currentTimerStatus = Timer.isStopped;
+    stopTime();
+  }
+
   switch (element.name) {
-    case 'focus':
-      console.log(inputValue)
-      UserInput.focus = inputValue
-      // GLOBAL.duration = UserInput.focus * 60
-      /*  if (GLOBAL.states.currentOptionType === OptionType.isFocusOn) {
-         clockDisplay.innerHTML = formatTime(UserInput.focus)
-       } */
+    case OptionType.isFocusOn:
+      UserInput.focusDuration = inputValue || parseInt(element.dataset.value)
+      GLOBAL.duration = UserInput.focusDuration * 60
       break;
-    case 'short-break':
-      console.log(inputValue)
-      UserInput.shortBreak = inputValue
-      // GLOBAL.duration = UserInput.shortBreak * 60
-      /*  if (GLOBAL.states.currentOptionType === OptionType.isShortBreak) {
-         clockDisplay.innerHTML = formatTime(UserInput.shortBreak)
-       } */
+    case OptionType.isShortBreak:
+      UserInput.shortBreakDuration = inputValue || parseInt(element.dataset.value)
+      GLOBAL.duration = UserInput.shortBreakDuration * 60
       break;
-    case 'long-break':
-      console.log(inputValue)
-      UserInput.longBreak = inputValue
-      // GLOBAL.duration = UserInput.longBreak * 60
-      /* if (GLOBAL.states.currentOptionType === OptionType.isLongBreak) {
-        clockDisplay.innerHTML = formatTime(UserInput.longBreak)
-      } */
+    case OptionType.isLongBreak:
+      UserInput.longBreakDuration = inputValue || parseInt(element.dataset.value)
+      GLOBAL.duration = UserInput.longBreakDuration * 60
       break;
     case 'interval':
-      console.log(inputValue)
-      UserInput.interval = inputValue
+      UserInput.interval = inputValue || parseInt(element.dataset.value)
       break;
     default:
       break;
   }
-  // GLOBAL.duration = parseInt(inputValue);
-  clockDisplay.innerHTML = formatTime(UserInput.focus)
-}
 
-// event listener to all inputs
-userInputs.forEach(input => {
-  input.addEventListener("change", userInputHandle)
-})
+  if (element.name === GLOBAL.currentSelected.value) {
+    clockDisplay.innerHTML = formatTime(GLOBAL.duration)
+  }
+}
 
 saveButton.addEventListener('click', saveButtonHandle)
 
