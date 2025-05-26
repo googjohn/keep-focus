@@ -30,17 +30,13 @@ const OptionType = Object.freeze({
   isFocusOn: "focus-on"
 });
 
-// object for user input
+// object for user input with default values from dataset
 const UserInput = {
-  focusDuration: 0,
-  shortBreakDuration: 0,
-  longBreakDuration: 0,
-  interval: 4, // default
+  focusDuration: parseInt(inputFocus.dataset.value),
+  shortBreakDuration: parseInt(inputShortBreak.dataset.value),
+  longBreakDuration: parseInt(inputLongBreak.dataset.value),
+  interval: parseInt(inputInterval.dataset.value),
 }
-UserInput.focusDuration = inputFocus.value || parseInt(inputFocus.dataset.value) * 60;
-UserInput.shortBreakDuration = inputShortBreak.value || parseInt(inputShortBreak.dataset.value) * 60;
-UserInput.longBreakDuration = inputLongBreak.value || parseInt(inputLongBreak.dataset.value) * 60;
-UserInput.interval = inputInterval.value || parseInt(inputInterval.dataset.value)
 
 // declare/define variables or create a global object
 // variables as properties to save global name space
@@ -59,7 +55,9 @@ const GLOBAL = {
   maxCount: UserInput.interval,
 }
 
-GLOBAL.duration = UserInput.focusDuration; // change. use input counterpart
+if (GLOBAL.states.currentOptionType === OptionType.isFocusOn) {
+  GLOBAL.duration = UserInput.focusDuration * 60
+}
 
 // initial display of duration
 clockDisplay.innerHTML = formatTime(GLOBAL.duration);
@@ -69,6 +67,7 @@ startButton.onclick = function () {
   switch (GLOBAL.states.currentTimerStatus) {
     case Timer.isStopped:
       startTime(GLOBAL.duration);
+      requestNotificationPermission()
       break;
     case Timer.isPaused:
       // use updated remaining duration
@@ -114,7 +113,7 @@ function countDown(duration, displayElement) {
 
         // send alert
         setTimeout(() => {
-          sendAlert(GLOBAL.states.currentOptionType)
+          // sendAlert(GLOBAL.states.currentOptionType)
         }, 1000)
 
         // wait a certain time before running break
@@ -126,6 +125,7 @@ function countDown(duration, displayElement) {
 
       displayElement.innerHTML = formatTime(currentDuration)
     }, 1000)
+
   }
 }
 
@@ -173,9 +173,11 @@ function runOptionType() {
     startTime(GLOBAL.duration)
 
   }
+
   // update displays
   messageElement.textContent = updateMessage(GLOBAL.states.currentOptionType)
   clockDisplay.innerHTML = formatTime(GLOBAL.duration)
+
 }
 
 // format time
@@ -260,18 +262,19 @@ function resetTime() {
   clockDisplay.innerHTML = formatTime(0)
 }
 
-// send alert
+// send alert/notification - we can use web notification api instead
 function sendAlert(optionType) {
-  if (optionType !== OptionType.isFocusOn) {
-    alarm.play();
-    alert("Time to focus!");
+  alarm.play();
+
+  setTimeout(() => {
+    alarm.currentTime = 0;
     alarm.pause()
-    alarm.currentTime = 0;
+  }, 1500)
+
+  if (optionType !== OptionType.isFocusOn) {
+    alert("Time to focus!");
   } else {
-    alarm.play();
     alert("Take a break!")
-    alarm.pause();
-    alarm.currentTime = 0;
   }
 }
 
@@ -297,28 +300,12 @@ function optionTypeButtonHandle(event) {
     GLOBAL.states.currentOptionType = currentSelected.value
 
     updateAppBackground(currentSelected.value)
-
-    // get the counterpart input using button/current selected value
+    // input counterpart of the focused button
+    let inputName = document.querySelector(`input[name="${currentSelected.value}"]`).name.split('-')[0];
     let inputValue = parseInt(document.querySelector(`input[name="${currentSelected.value}"]`).value);
-    let defaultValue = parseInt(document.querySelector(`input[name="${currentSelected.value}"]`).dataset.value)
+    let defaultValue = UserInput[inputName !== 'focus' ? `${inputName}BreakDuration` : `${inputName}Duration`]
 
-    switch (element.value) {
-      case OptionType.isFocusOn:
-        UserInput.focusDuration = inputValue || defaultValue;
-        GLOBAL.duration = UserInput.focusDuration * 60
-        break;
-      case OptionType.isShortBreak:
-        UserInput.shortBreakDuration = inputValue || defaultValue;
-        GLOBAL.duration = UserInput.shortBreakDuration * 60
-        break;
-      case OptionType.isLongBreak:
-        UserInput.longBreakDuration = inputValue || defaultValue;
-        GLOBAL.duration = UserInput.longBreakDuration * 60
-        break;
-      default:
-        break;
-    }
-
+    GLOBAL.duration = (inputValue || defaultValue) * 60;
     clockDisplay.innerHTML = formatTime(GLOBAL.duration)
   }
   messageElement.textContent = updateMessage(GLOBAL.states.currentOptionType)
@@ -363,23 +350,15 @@ function userInputHandle(event) {
   let element = event.target
   let inputValue = parseInt(element.value)
 
-  if (GLOBAL.states.currentTimerStatus !== Timer.isStopped) {
-    GLOBAL.states.currentTimerStatus = Timer.isStopped;
-    stopTime();
-  }
-
   switch (element.name) {
     case OptionType.isFocusOn:
-      UserInput.focusDuration = inputValue || parseInt(element.dataset.value)
-      GLOBAL.duration = UserInput.focusDuration * 60
+      UserInput.focusDuration = (inputValue || parseInt(element.dataset.value))
       break;
     case OptionType.isShortBreak:
-      UserInput.shortBreakDuration = inputValue || parseInt(element.dataset.value)
-      GLOBAL.duration = UserInput.shortBreakDuration * 60
+      UserInput.shortBreakDuration = (inputValue || parseInt(element.dataset.value))
       break;
     case OptionType.isLongBreak:
-      UserInput.longBreakDuration = inputValue || parseInt(element.dataset.value)
-      GLOBAL.duration = UserInput.longBreakDuration * 60
+      UserInput.longBreakDuration = (inputValue || parseInt(element.dataset.value))
       break;
     case 'interval':
       UserInput.interval = inputValue || parseInt(element.dataset.value)
@@ -388,14 +367,65 @@ function userInputHandle(event) {
       break;
   }
 
-  if (element.name === GLOBAL.currentSelected.value) {
+  if (element.name === GLOBAL.states.currentOptionType) {
+    if (GLOBAL.states.currentTimerStatus !== Timer.isStopped) {
+      stopTime();
+    }
+
+    GLOBAL.duration = (element.name === "focus-on" ? UserInput.focusDuration :
+      element.name === 'short-break' ? UserInput.shortBreakDuration :
+        UserInput.longBreakDuration) * 60;
     clockDisplay.innerHTML = formatTime(GLOBAL.duration)
   }
 }
 
 saveButton.addEventListener('click', saveButtonHandle)
 
+// current function is just another wayt to close the modal
 function saveButtonHandle() {
   modal.classList.toggle('active')
   modal.dataset.modalActive = false;
+}
+
+// request/send notification
+async function requestNotificationPermission() {
+  // check if browser supports notification
+  if (!('Notification' in window)) {
+    console.log("Browser does not support notification!")
+    return;
+  }
+
+  // check if notification has already been grandted or denied
+  if (Notification.permission === 'granted') {
+    console.log("Notification permission already granted.")
+    return;
+  } else if (Notification.permission === 'denied') {
+    console.warn("Notification permission already denied. User will need to enable it manually")
+    return;
+  }
+
+  // request for permission
+  /* Notification.requestPermission()
+    .then(permission => {
+      if (permission === 'granted') {
+        console.log('You can now send notifications!')
+        alert('hi')
+      } else {
+        console.log('Notification permission denied.')
+      }
+    })
+    .catch(error => {
+      console.error('Error requesting notification permission.', error)
+    }) */
+  try {
+    const permission = await Notification.requestPermission()
+    console.log(permission)
+    if (permission === 'granted') {
+      console.log('You can now send notifications!')
+    } else {
+      console.log('Notification permission denied!')
+    }
+  } catch (error) {
+    console.error('Error requesting notification permission.', error)
+  }
 }
