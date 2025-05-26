@@ -258,3 +258,18 @@ body.long-break {
     }
   }
 }
+
+.quote {
+  margin-top: 30px;
+  padding: 10px;
+  border-radius: 10px;
+  color: black;
+  font-size: 1.3em;
+  font-weight: 600;
+  background-color: rgba(255  , 255, 255, .3);
+}
+
+.message {
+  font-size: 1.2em;
+  color: rgb(218, 215, 215);
+}

@@ -1,3 +1,5 @@
+import { Quotes } from "./quotes.js";
+
 // declare/access elements needed
 const clockDisplay = document.querySelector(".clock-display");
 const optionButtons = document.querySelector("#option-buttons");
@@ -15,6 +17,8 @@ const inputFocus = document.querySelector("input[name='focus-on']");
 const inputShortBreak = document.querySelector("input[name='short-break']");
 const inputLongBreak = document.querySelector("input[name='long-break']");
 const inputInterval = document.querySelector("input[name='interval']");
+
+// document.addEventListener('DOMContentLoaded', fetchQuotes)
 
 // define enum (enumeration) or boolean flag for state management
 const Timer = Object.freeze({
@@ -37,6 +41,7 @@ const UserInput = {
   longBreakDuration: parseInt(inputLongBreak.dataset.value),
   interval: parseInt(inputInterval.dataset.value),
 }
+
 
 // declare/define variables or create a global object
 // variables as properties to save global name space
@@ -184,6 +189,9 @@ function runOptionType() {
 
     GLOBAL.duration = UserInput.focusDuration * 60;
     startTime(GLOBAL.duration)
+
+    randomIndex = Math.floor(Math.random() * (quotes.length + 1))
+    quoteElement.innerHTML = quotes[randomIndex]
 
   }
 
@@ -447,3 +455,36 @@ function showNotification(title, body, options) {
     }
   }
 }
+
+// fetch zen quotes
+// because i am lazy to find free api's, i'll just and to avoid rate limit
+// i'll just fetch from https://zenquotes.io/api/quotes/ and save the quotes in an object/array
+// and just cycle them or create a data.json using it and use as our own api
+// this is wrong but i will have to be frugal and use the best way for me. 
+// this is a personal project and will never be used for production that earns money
+// thanks zenquotes.io!
+async function fetchQuotes() {
+  const options = {
+
+  }
+  try {
+    const response = await fetch('https://zenquotes.io/api/quotes/', options);
+
+    const quotes = response.json();
+
+    quotes.forEach(quote => {
+      Quotes.push(quote)
+    })
+  } catch (error) {
+    console.log('Error fetching quotes.', error)
+  }
+}
+
+
+// this would be the simples way
+// will try to utilize/convert to own api later so i can use data fetching in this project as well
+const quotes = Quotes.map(quote => quote.h)
+  .filter(quote => quote.indexOf !== quote.lastIndexOf)
+
+let randomIndex = Math.floor(Math.random() * (quotes.length + 1))
+quoteElement.innerHTML = quotes[randomIndex]
