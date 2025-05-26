@@ -425,6 +425,12 @@ function showNotification(title, body, options) {
     const notification = new Notification(title, notificationOptions)
     alarm.play();
 
+    setTimeout(() => {
+      if (!alarm.paused && notification) {
+        notification.close();
+      }
+    }, 5000)
+
     notification.onclick = function () {
       window.focus();
       this.close();
@@ -432,8 +438,8 @@ function showNotification(title, body, options) {
 
     notification.onclose = function () {
       console.log('Notification closed.')
-      alarm.currentTime = 0;
       alarm.pause();
+      alarm.currentTime = 0;
     }
 
     notification.onerror = function () {
