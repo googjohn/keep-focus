@@ -13,7 +13,7 @@ body {
   max-width: 40vw;
   min-width: 450px;
   position: relative;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.308);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.308);
   margin: 0 auto;
   padding: 5px 0;
 
@@ -53,6 +53,7 @@ main {
   min-height: 100%;
 
   #options-container {
+    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -61,6 +62,7 @@ main {
     height: 300px;
     border-radius: 10px;
     background-color: rgba(255  , 255, 255, .3);
+    overflow: hidden;
 
     #time-container {
       .clock-display span {
@@ -261,7 +263,7 @@ body.long-break {
 
 .quote {
   margin-top: 30px;
-  padding: 10px;
+  padding: 20px;
   border-radius: 10px;
   color: black;
   font-size: 1.3em;
@@ -272,4 +274,28 @@ body.long-break {
 .message {
   font-size: 1.2em;
   color: rgb(218, 215, 215);
+}
+
+#timer-indicator-bar {
+  position: absolute;
+  width: 0%;
+  height: 10px;
+  background-color: white;
+  border-radius: 8px;
+  bottom: -5px;
+  left: 0;
+}
+
+.progress-rect {
+  stroke: rgba(207, 206, 206, 0.952);
+  stroke-width: 10;
+  fill: none;
+}
+
+.progress-svg {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
 }

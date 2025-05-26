@@ -17,6 +17,7 @@ const inputFocus = document.querySelector("input[name='focus-on']");
 const inputShortBreak = document.querySelector("input[name='short-break']");
 const inputLongBreak = document.querySelector("input[name='long-break']");
 const inputInterval = document.querySelector("input[name='interval']");
+const timerBar = document.querySelector('#timer-indicator-bar');
 
 // document.addEventListener('DOMContentLoaded', fetchQuotes)
 
@@ -58,6 +59,7 @@ const GLOBAL = {
   previousSelected: null,
   count: 0,
   maxCount: UserInput.interval,
+  currentTimerProgress: 0,
 }
 
 if (GLOBAL.states.currentOptionType === OptionType.isFocusOn) {
@@ -113,6 +115,19 @@ function countDown(duration, displayElement) {
 
       // keep updated to be used for resume function
       GLOBAL.remainingDuration = currentDuration;
+
+      // timer bar indicator
+      let timerProgress = (totalDuration - currentDuration) / totalDuration
+      console.log(timerProgress)
+      GLOBAL.currentTimerProgress = timerProgress
+      /* let timerBarlength = GLOBAL.totalDuration - GLOBAL.remainingDuration
+      timerBar.style.width = `${((timerBarlength / GLOBAL.totalDuration) * 100)}%` */
+      /*  if (GLOBAL.states.currentTimerStatus === Timer.isPaused) {
+         let currentTimerProgress = (elapsedTime + currentDuration) / totalDuration
+         updateProgressRect(currentTimerProgress)
+       } else {
+       } */
+      updateProgressRect(timerProgress)
 
       if (currentDuration <= 0) {
         stopTime();
@@ -487,3 +502,35 @@ const quotes = Quotes.map(quote => quote.h)
 
 let randomIndex = Math.floor(Math.random() * (quotes.length + 1))
 quoteElement.innerHTML = quotes[randomIndex]
+
+// try container side indicator
+function updateProgressRect(progress) {
+  const container = document.querySelector("#options-container");
+  const rect = document.querySelector(".progress-rect");
+  const svg = document.querySelector(".progress-svg");
+  if (GLOBAL.states.currentTimerStatus !== Timer.isStopped) {
+    svg.style.display = 'block'
+  } else {
+    svg.style.dispay = 'none'
+  }
+
+  rect.setAttribute('rx', 10);
+  rect.setAttribute('ry', 10);
+
+  const width = container.offsetWidth;
+  const height = container.offsetHeight;
+  const perimeter = 2 * (width + height);
+
+  rect.setAttribute("stroke-dasharray", perimeter);
+  rect.setAttribute("stroke-dashoffset", perimeter * (1 - progress));
+
+  if (progress === 1) {
+    rect.style.stroke = 'white'
+  } else {
+    rect.style.stroke = 'rgba(207, 206, 206, 0.952)'
+  }
+}
+
+window.addEventListener('resize', () => {
+  updateProgressRect(GLOBAL.currentTimerProgress)
+})
