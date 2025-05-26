@@ -67,7 +67,9 @@ startButton.onclick = function () {
   switch (GLOBAL.states.currentTimerStatus) {
     case Timer.isStopped:
       startTime(GLOBAL.duration);
-      requestNotificationPermission()
+      if (Notification.permission !== 'granted') {
+        requestNotificationPermission()
+      }
       break;
     case Timer.isPaused:
       // use updated remaining duration
@@ -111,10 +113,21 @@ function countDown(duration, displayElement) {
         stopTime();
         resetTime();
 
-        // send alert
-        setTimeout(() => {
-          // sendAlert(GLOBAL.states.currentOptionType)
-        }, 1000)
+        // custom notification using web notification api
+        let notificationTitle = '';
+        let notificationBody = '';
+
+        if (GLOBAL.states.currentOptionType === OptionType.isFocusOn) {
+          notificationTitle = 'Time for a break.';
+          notificationBody = GLOBAL.count > GLOBAL.maxCount ? "It's time for a long break." : 'Take a short break.';
+        } else {
+          notificationTitle = 'Back to focus.';
+          notificationBody = "Break is over, it's time to get back to work.";
+        }
+
+        showNotification(notificationTitle, notificationBody, {
+          tag: 'pomodoro-timer-end',
+        })
 
         // wait a certain time before running break
         setTimeout(() => {
@@ -262,22 +275,6 @@ function resetTime() {
   clockDisplay.innerHTML = formatTime(0)
 }
 
-// send alert/notification - we can use web notification api instead
-function sendAlert(optionType) {
-  alarm.play();
-
-  setTimeout(() => {
-    alarm.currentTime = 0;
-    alarm.pause()
-  }, 1500)
-
-  if (optionType !== OptionType.isFocusOn) {
-    alert("Time to focus!");
-  } else {
-    alert("Take a break!")
-  }
-}
-
 // option types button handle
 function optionTypeButtonHandle(event) {
   let currentSelected = document.querySelector("[data-selected='true']")
@@ -387,7 +384,7 @@ function saveButtonHandle() {
   modal.dataset.modalActive = false;
 }
 
-// request/send notification
+// request/send notification using web notification api
 async function requestNotificationPermission() {
   // check if browser supports notification
   if (!('Notification' in window)) {
@@ -405,21 +402,8 @@ async function requestNotificationPermission() {
   }
 
   // request for permission
-  /* Notification.requestPermission()
-    .then(permission => {
-      if (permission === 'granted') {
-        console.log('You can now send notifications!')
-        alert('hi')
-      } else {
-        console.log('Notification permission denied.')
-      }
-    })
-    .catch(error => {
-      console.error('Error requesting notification permission.', error)
-    }) */
   try {
     const permission = await Notification.requestPermission()
-    console.log(permission)
     if (permission === 'granted') {
       console.log('You can now send notifications!')
     } else {
@@ -427,5 +411,33 @@ async function requestNotificationPermission() {
     }
   } catch (error) {
     console.error('Error requesting notification permission.', error)
+  }
+}
+
+function showNotification(title, body, options) {
+  if (Notification.permission === "granted") {
+    const notificationOptions = {
+      body: body,
+      tag: options.tag,
+      renotify: options.renotify || true,
+    }
+
+    const notification = new Notification(title, notificationOptions)
+    alarm.play();
+
+    notification.onclick = function () {
+      window.focus();
+      this.close();
+    }
+
+    notification.onclose = function () {
+      console.log('Notification closed.')
+      alarm.currentTime = 0;
+      alarm.pause();
+    }
+
+    notification.onerror = function () {
+      console.error('Notification error.', error)
+    }
   }
 }
