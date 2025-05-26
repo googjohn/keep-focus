@@ -484,7 +484,6 @@ async function fetchQuotes() {
 // this would be the simples way
 // will try to utilize/convert to own api later so i can use data fetching in this project as well
 const quotes = Quotes.map(quote => quote.h)
-  .filter(quote => quote.indexOf !== quote.lastIndexOf)
 
 let randomIndex = Math.floor(Math.random() * (quotes.length + 1))
 quoteElement.innerHTML = quotes[randomIndex]
