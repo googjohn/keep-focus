@@ -59,7 +59,6 @@ const GLOBAL = {
   previousSelected: null,
   count: 0,
   maxCount: UserInput.interval,
-  currentTimerProgress: 0,
 }
 
 if (GLOBAL.states.currentOptionType === OptionType.isFocusOn) {
@@ -102,7 +101,6 @@ function countDown(duration, displayElement) {
   let elapsedTime = startTime;
   let totalDuration = duration;
   let currentDuration = 0;
-  GLOBAL.totalDuration = totalDuration;
 
   return function () {
 
@@ -117,17 +115,16 @@ function countDown(duration, displayElement) {
       GLOBAL.remainingDuration = currentDuration;
 
       // timer bar indicator
-      let timerProgress = (totalDuration - currentDuration) / totalDuration
-      console.log(timerProgress)
-      GLOBAL.currentTimerProgress = timerProgress
+      // will a border indicator instead
       /* let timerBarlength = GLOBAL.totalDuration - GLOBAL.remainingDuration
-      timerBar.style.width = `${((timerBarlength / GLOBAL.totalDuration) * 100)}%` */
-      /*  if (GLOBAL.states.currentTimerStatus === Timer.isPaused) {
-         let currentTimerProgress = (elapsedTime + currentDuration) / totalDuration
-         updateProgressRect(currentTimerProgress)
-       } else {
-       } */
-      updateProgressRect(timerProgress)
+      timerBar.style.width = `${((timerBarlength / GLOBAL.totalDuration) * 100)}%`
+      if (((timerBarlength / GLOBAL.totalDuration) * 100) === 100) {
+        timerBar.style.backgroundColor = 'white'
+      } else {
+        timerBar.style.backgroundColor = 'rgba(175, 173, 173, 0.979)'
+      } */
+
+      updateProgressRect(duration, elapsedTime)
 
       if (currentDuration <= 0) {
         stopTime();
@@ -139,7 +136,7 @@ function countDown(duration, displayElement) {
 
         if (GLOBAL.states.currentOptionType === OptionType.isFocusOn) {
           notificationTitle = 'Time for a break.';
-          notificationBody = GLOBAL.count > GLOBAL.maxCount ? "It's time for a long break." : 'Take a short break.';
+          notificationBody = (GLOBAL.count >= (GLOBAL.maxCount - 1) ? "It's time for a long break." : 'Take a short break.');
         } else {
           notificationTitle = 'Back to focus.';
           notificationBody = "Break is over, it's time to get back to work.";
@@ -209,11 +206,9 @@ function runOptionType() {
     quoteElement.innerHTML = quotes[randomIndex]
 
   }
-
   // update displays
   messageElement.textContent = updateMessage(GLOBAL.states.currentOptionType)
   clockDisplay.innerHTML = formatTime(GLOBAL.duration)
-
 }
 
 // format time
@@ -259,9 +254,14 @@ function updateAppBackground(optionType) {
 
 // countdown start
 function startTime(duration) {
+  // set global total duration for the first time
+  if (!GLOBAL.totalDuration) {
+    GLOBAL.totalDuration = duration;
+  }
+
   if (GLOBAL.states.currentTimerStatus !== Timer.isRunning) {
     GLOBAL.states.currentTimerStatus = Timer.isRunning;
-    const countdown = countDown(duration, clockDisplay)
+    let countdown = countDown(duration, clockDisplay);
     countdown();
     updateStartButton('pause', startButton, true)
   }
@@ -294,6 +294,7 @@ function resumeTime(duration) {
 function resetTime() {
   GLOBAL.duration = 0;
   GLOBAL.remainingDuration = 0;
+  GLOBAL.totalDuration = 0;
   GLOBAL.timerInterval = null;
   clockDisplay.innerHTML = formatTime(0)
 }
@@ -308,6 +309,9 @@ function optionTypeButtonHandle(event) {
   } else {
     if (GLOBAL.states.currentTimerStatus !== Timer.isStopped) {
       stopTime();
+      resetTime();
+      let elapsedTime = GLOBAL.totalDuration - GLOBAL.remainingDuration;
+      updateProgressRect(GLOBAL.totalDuration, elapsedTime)
     }
 
     GLOBAL.previousSelected = currentSelected;
@@ -382,6 +386,7 @@ function userInputHandle(event) {
       break;
     case 'interval':
       UserInput.interval = inputValue || parseInt(element.dataset.value)
+      GLOBAL.maxCount = UserInput.interval;
       break;
     default:
       break;
@@ -390,6 +395,9 @@ function userInputHandle(event) {
   if (element.name === GLOBAL.states.currentOptionType) {
     if (GLOBAL.states.currentTimerStatus !== Timer.isStopped) {
       stopTime();
+      resetTime();
+      let elapsedTime = GLOBAL.totalDuration - GLOBAL.remainingDuration;
+      updateProgressRect(GLOBAL.totalDuration, elapsedTime)
     }
 
     GLOBAL.duration = (element.name === "focus-on" ? UserInput.focusDuration :
@@ -460,7 +468,6 @@ function showNotification(title, body, options) {
     }
 
     notification.onclose = function () {
-      console.log('Notification closed.')
       alarm.pause();
       alarm.currentTime = 0;
     }
@@ -472,20 +479,21 @@ function showNotification(title, body, options) {
 }
 
 // fetch zen quotes
-// because i am lazy to find free api's, i'll just and to avoid rate limit
-// i'll just fetch from https://zenquotes.io/api/quotes/ and save the quotes in an object/array
+// because i am lazy to find free apis, i'll just fetch using postman to avoid rate limit
+// fetch from https://zenquotes.io/api/quotes/ and save the quotes in an object/array
 // and just cycle them or create a data.json using it and use as our own api
 // this is wrong but i will have to be frugal and use the best way for me. 
 // this is a personal project and will never be used for production that earns money
 // thanks zenquotes.io!
-async function fetchQuotes() {
+
+/* async function fetchQuotes() {
   const options = {
 
   }
   try {
     const response = await fetch('https://zenquotes.io/api/quotes/', options);
 
-    const quotes = response.json();
+    const quotes = await response.json();
 
     quotes.forEach(quote => {
       Quotes.push(quote)
@@ -493,10 +501,10 @@ async function fetchQuotes() {
   } catch (error) {
     console.log('Error fetching quotes.', error)
   }
-}
+} */
 
 
-// this would be the simples way
+// this would be the simplest way
 // will try to utilize/convert to own api later so i can use data fetching in this project as well
 const quotes = Quotes.map(quote => quote.h)
 
@@ -504,15 +512,25 @@ let randomIndex = Math.floor(Math.random() * (quotes.length + 1))
 quoteElement.innerHTML = quotes[randomIndex]
 
 // try container side indicator
-function updateProgressRect(progress) {
+function updateProgressRect(duration, elapsedTime) {
+  let progress;
   const container = document.querySelector("#options-container");
   const rect = document.querySelector(".progress-rect");
   const svg = document.querySelector(".progress-svg");
+
   if (GLOBAL.states.currentTimerStatus !== Timer.isStopped) {
-    svg.style.display = 'block'
+    svg.classList.add('show')
   } else {
-    svg.style.dispay = 'none'
+    svg.classList.remove('show')
   }
+
+  if (GLOBAL.totalDuration !== duration) {
+    let elapsedTotal = (GLOBAL.totalDuration - duration) + elapsedTime
+    progress = elapsedTotal / GLOBAL.totalDuration
+  } else {
+    progress = elapsedTime / duration;
+  }
+
 
   rect.setAttribute('rx', 10);
   rect.setAttribute('ry', 10);
@@ -525,12 +543,13 @@ function updateProgressRect(progress) {
   rect.setAttribute("stroke-dashoffset", perimeter * (1 - progress));
 
   if (progress === 1) {
-    rect.style.stroke = 'white'
+    rect.classList.add('white')
   } else {
-    rect.style.stroke = 'rgba(207, 206, 206, 0.952)'
+    rect.classList.remove('white')
   }
 }
 
+// during resize, perimeter or total size/length of container/element changes
 window.addEventListener('resize', () => {
-  updateProgressRect(GLOBAL.currentTimerProgress)
+  updateProgressRect(GLOBAL.totalDuration, GLOBAL.totalDuration - GLOBAL.remainingDuration)
 })

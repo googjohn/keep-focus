@@ -279,15 +279,15 @@ body.long-break {
 #timer-indicator-bar {
   position: absolute;
   width: 0%;
-  height: 10px;
-  background-color: white;
+  height: 3px;
+  background-color: rgba(175, 173, 173, 0.979);
   border-radius: 8px;
-  bottom: -5px;
+  bottom: -2px;
   left: 0;
 }
 
 .progress-rect {
-  stroke: rgba(207, 206, 206, 0.952);
+  stroke: rgba(216, 207, 207, 0.938);
   stroke-width: 10;
   fill: none;
 }
@@ -298,4 +298,12 @@ body.long-break {
   top: 0;
   left: 0;
   pointer-events: none;
+}
+
+.white {
+  stroke: white;
+}
+
+.show {
+  display: block;
 }
