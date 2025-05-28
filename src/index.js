@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (error) {
     console.error('Error retrieving user settings', error)
     localStorage.clear();
+    console.log('localStorage cleared!')
   }
 })
 
@@ -465,6 +466,7 @@ function saveButtonHandle() {
     console.error('Error saving setting to localStorage!', error)
     if (typeof error === "QoutaExceededError") {
       localStorage.clear();
+      console.log('localStorage cleared!')
     }
   }
 }
