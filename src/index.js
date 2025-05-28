@@ -61,6 +61,47 @@ const GLOBAL = {
   maxCount: UserInput.interval,
 }
 
+// check if there are saved settings in localStorage for user settings
+// retrieve and use 
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const savedSettings = localStorage.getItem('userInputSettings');
+    if (!savedSettings) {
+      console.log('User setting doesn\'t exist.')
+      return;
+    }
+
+    const parcedSettings = JSON.parse(savedSettings);
+
+    // update UserInput with loaded values
+    UserInput.focusDuration = parcedSettings.focusDuration || UserInput.focusDuration;
+    UserInput.shortBreakDuration = parcedSettings.shortBreakDuration || UserInput.shortBreakDuration;
+    UserInput.longBreakDuration = parcedSettings.longBreakDuration || UserInput.longBreakDuration;
+    UserInput.interval = parcedSettings.interval || UserInput.interval;
+
+    // update inputs to reflect input value
+    inputFocus.value = UserInput.focusDuration;
+    inputShortBreak.value = UserInput.shortBreakDuration;
+    inputLongBreak.value = UserInput.longBreakDuration;
+    inputInterval.value = UserInput.interval;
+
+    // update global max count
+    GLOBAL.maxCount = UserInput.interval;
+
+    // update initial duration for potentially new/different duration from default value
+    if (GLOBAL.states.currentOptionType === OptionType.isFocusOn) {
+      GLOBAL.duration = UserInput.focusDuration * 60;
+    }
+
+    clockDisplay.innerHTML = formatTime(GLOBAL.duration);
+
+    console.log('User settings successfully placed!', UserInput)
+  } catch (error) {
+    console.error('Error retrieving user settings', error)
+    localStorage.clear();
+  }
+})
+
 if (GLOBAL.states.currentOptionType === OptionType.isFocusOn) {
   GLOBAL.duration = UserInput.focusDuration * 60
 }
@@ -413,6 +454,19 @@ saveButton.addEventListener('click', saveButtonHandle)
 function saveButtonHandle() {
   modal.classList.toggle('active')
   modal.dataset.modalActive = false;
+
+  try {
+    const USER_INPUTS = JSON.stringify(UserInput)
+    const userSettings = localStorage.setItem('userInputSettings', USER_INPUTS)
+    if (!userSettings) {
+      console.log('User input settings successfully saved to localstorage!')
+    }
+  } catch (error) {
+    console.error('Error saving setting to localStorage!', error)
+    if (typeof error === "QoutaExceededError") {
+      localStorage.clear();
+    }
+  }
 }
 
 // request/send notification using web notification api
